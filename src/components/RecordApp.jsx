@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 const RecordApp = () => {
   // --- AUTHENTICATION STATE ---
@@ -14,8 +14,9 @@ const RecordApp = () => {
     return savedRecords ? JSON.parse(savedRecords) : [];
   });
   
+  // Added 'amount' and 'referredBy' to the initial state
   const [formData, setFormData] = useState({
-    name: '', age: '', gender: '', test: '', payment: 'Cash'
+    name: '', age: '', gender: '', referredBy: '', test: '', amount: '', payment: 'Cash'
   });
   
   const [searchTerm, setSearchTerm] = useState('');
@@ -32,13 +33,12 @@ const RecordApp = () => {
   const handleLoginChange = (e) => {
     const { name, value } = e.target;
     setLoginData(prev => ({ ...prev, [name]: value }));
-    setLoginError(false); // clear error when typing
+    setLoginError(false);
   };
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    // Hardcoded credentials for demonstration
-    if (loginData.username === 'love' && loginData.password === 'love123') {
+    if (loginData.username === 'admin' && loginData.password === 'password') {
       setIsAuthenticated(true);
       localStorage.setItem('isLoggedIn', 'true');
     } else {
@@ -60,19 +60,31 @@ const RecordApp = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const newRecord = { id: Date.now(), ...formData };
+    
+    const newRecord = { 
+      id: Date.now(), 
+      ...formData,
+      // Default to "Self" if referredBy is left empty
+      referredBy: formData.referredBy.trim() === '' ? 'Self' : formData.referredBy 
+    };
+    
     setRecords([newRecord, ...records]);
-    setFormData({ name: '', age: '', gender: '', test: '', payment: 'Cash' });
+    
+    // Reset form
+    setFormData({ name: '', age: '', gender: '', referredBy: '', test: '', amount: '', payment: 'Cash' });
   };
 
   const deleteRecord = (id) => {
     setRecords(records.filter(record => record.id !== id));
   };
 
+  // Updated search to include amount and referred by
   const filteredRecords = records.filter(record => 
     record.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     record.test.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    record.payment.toLowerCase().includes(searchTerm.toLowerCase())
+    record.payment.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.referredBy.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    record.amount.toString().includes(searchTerm)
   );
 
   // ==========================================
@@ -96,38 +108,23 @@ const RecordApp = () => {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Username</label>
               <input 
-                type="text" 
-                name="username"
-                value={loginData.username}
-                onChange={handleLoginChange}
-                required 
-                placeholder="Enter 'admin'"
+                type="text" name="username" value={loginData.username} onChange={handleLoginChange} required placeholder="Enter 'admin'"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
               />
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">Password</label>
               <input 
-                type="password" 
-                name="password"
-                value={loginData.password}
-                onChange={handleLoginChange}
-                required 
-                placeholder="Enter 'password'"
+                type="password" name="password" value={loginData.password} onChange={handleLoginChange} required placeholder="Enter 'password'"
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
               />
             </div>
             
             {loginError && (
-              <p className="text-red-500 text-sm font-medium bg-red-50 p-2 rounded-lg text-center">
-                Invalid username or password
-              </p>
+              <p className="text-red-500 text-sm font-medium bg-red-50 p-2 rounded-lg text-center">Invalid username or password</p>
             )}
 
-            <button 
-              type="submit" 
-              className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-xl transition-colors mt-4 shadow-md"
-            >
+            <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-xl transition-colors mt-4 shadow-md">
               Sign In
             </button>
           </form>
@@ -141,7 +138,7 @@ const RecordApp = () => {
   // ==========================================
   return (
     <div className="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         
         {/* Header */}
         <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -153,14 +150,11 @@ const RecordApp = () => {
             </div>
             <div>
               <h1 className="text-2xl font-bold text-slate-800">Lab Records</h1>
-              <p className="text-sm text-slate-500">Manage patient tests and payments</p>
+              <p className="text-sm text-slate-500">Manage patient tests, referrals, and payments</p>
             </div>
           </div>
           
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl hover:bg-slate-50 hover:text-red-500 transition-colors shadow-sm text-sm font-medium"
-          >
+          <button onClick={handleLogout} className="flex items-center gap-2 bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl hover:bg-slate-50 hover:text-red-500 transition-colors shadow-sm text-sm font-medium">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
             </svg>
@@ -168,10 +162,10 @@ const RecordApp = () => {
           </button>
         </header>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           
           {/* LEFT COLUMN: Form */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-4 xl:col-span-3">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-8">
               <h2 className="text-lg font-semibold mb-5 flex items-center gap-2">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-teal-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -183,39 +177,26 @@ const RecordApp = () => {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Full Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Patient Name</label>
                   <input 
-                    type="text" 
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required 
-                    placeholder="John Doe" 
+                    type="text" name="name" value={formData.name} onChange={handleChange} required placeholder="John Doe" 
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   />
                 </div>
 
-                {/* Age & Gender Row */}
+                {/* Age & Gender */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Age</label>
                     <input 
-                      type="number" 
-                      name="age"
-                      value={formData.age}
-                      onChange={handleChange}
-                      required min="1" max="120" 
-                      placeholder="e.g. 35" 
+                      type="number" name="age" value={formData.age} onChange={handleChange} required min="1" max="120" placeholder="e.g. 35" 
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                     />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Gender</label>
                     <select 
-                      name="gender"
-                      value={formData.gender}
-                      onChange={handleChange}
-                      required 
+                      name="gender" value={formData.gender} onChange={handleChange} required 
                       className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all bg-white"
                     >
                       <option value="" disabled>Select...</option>
@@ -226,18 +207,31 @@ const RecordApp = () => {
                   </div>
                 </div>
 
-                {/* Test */}
+                {/* Referred By */}
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Test Name</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Referred By <span className="text-slate-400 font-normal">(Optional)</span></label>
                   <input 
-                    type="text" 
-                    name="test"
-                    value={formData.test}
-                    onChange={handleChange}
-                    required 
-                    placeholder="e.g. Blood Test, X-Ray" 
+                    type="text" name="referredBy" value={formData.referredBy} onChange={handleChange} placeholder="e.g. Dr. Smith" 
                     className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
                   />
+                </div>
+
+                {/* Test & Amount */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Test Name</label>
+                    <input 
+                      type="text" name="test" value={formData.test} onChange={handleChange} required placeholder="e.g. Blood Test" 
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 mb-1">Amount (₹)</label>
+                    <input 
+                      type="number" name="amount" value={formData.amount} onChange={handleChange} required min="0" placeholder="e.g. 500" 
+                      className="w-full px-4 py-2.5 rounded-xl border border-slate-200 focus:ring-2 focus:ring-teal-500 outline-none transition-all"
+                    />
+                  </div>
                 </div>
 
                 {/* Payment Method */}
@@ -247,14 +241,14 @@ const RecordApp = () => {
                     <label className="cursor-pointer relative">
                       <input type="radio" name="payment" value="Cash" checked={formData.payment === 'Cash'} onChange={handleChange} className="peer sr-only"/>
                       <div className="text-center px-4 py-2.5 border border-slate-200 rounded-xl peer-checked:bg-teal-50 peer-checked:border-teal-500 peer-checked:text-teal-700 hover:bg-slate-50 transition-all font-medium text-sm flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
                         Cash
                       </div>
                     </label>
                     <label className="cursor-pointer relative">
                       <input type="radio" name="payment" value="Online" checked={formData.payment === 'Online'} onChange={handleChange} className="peer sr-only"/>
                       <div className="text-center px-4 py-2.5 border border-slate-200 rounded-xl peer-checked:bg-teal-50 peer-checked:border-teal-500 peer-checked:text-teal-700 hover:bg-slate-50 transition-all font-medium text-sm flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
                         Online
                       </div>
                     </label>
@@ -263,15 +257,15 @@ const RecordApp = () => {
 
                 {/* Submit */}
                 <button type="submit" className="w-full bg-teal-600 hover:bg-teal-700 text-white font-semibold py-3 rounded-xl transition-colors mt-2 shadow-sm">
-                  Add Record
+                  Save Record
                 </button>
               </form>
             </div>
           </div>
 
           {/* RIGHT COLUMN: Data Display & Search */}
-          <div className="lg:col-span-2 flex flex-col h-full">
-            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col">
+          <div className="lg:col-span-8 xl:col-span-9 flex flex-col h-full">
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex-1 flex flex-col overflow-hidden">
               
               {/* Search Header */}
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -283,13 +277,11 @@ const RecordApp = () => {
                   </span>
                 </h2>
                 
-                <div className="relative w-full sm:w-64">
+                <div className="relative w-full sm:w-72">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 absolute left-3 top-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
                   <input 
-                    type="text" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Search by name or test..." 
+                    type="text" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder="Search name, doctor, or test..." 
                     className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:ring-2 focus:ring-teal-500 outline-none transition-all text-sm"
                   />
                 </div>
@@ -306,41 +298,64 @@ const RecordApp = () => {
                     <p className="text-slate-400 text-sm mt-1">Add a new record or adjust your search.</p>
                   </div>
                 ) : (
-                  <table className="w-full text-left border-collapse">
+                  <table className="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                       <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-200">
-                        <th className="px-6 py-4 font-semibold">Name</th>
-                        <th className="px-6 py-4 font-semibold">Age/Gender</th>
-                        <th className="px-6 py-4 font-semibold">Test</th>
-                        <th className="px-6 py-4 font-semibold">Payment</th>
-                        <th className="px-6 py-4 font-semibold text-right">Action</th>
+                        <th className="px-5 py-4 font-semibold">Patient</th>
+                        <th className="px-5 py-4 font-semibold">Referred By</th>
+                        <th className="px-5 py-4 font-semibold">Test</th>
+                        <th className="px-5 py-4 font-semibold">Payment</th>
+                        <th className="px-5 py-4 font-semibold text-right">Action</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">
                       {filteredRecords.map((record) => (
                         <tr key={record.id} className="hover:bg-slate-50 transition-colors group">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-slate-800">{record.name}</div>
+                          
+                          {/* Patient Info */}
+                          <td className="px-5 py-4">
+                            <div className="font-semibold text-slate-800">{record.name}</div>
+                            <div className="text-xs text-slate-500 mt-1">
+                              {record.age} yrs • {record.gender}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-slate-600">
-                            {record.age} yrs <span className="mx-1 text-slate-300">|</span> 
-                            <span className="font-medium">{record.gender}</span>
+                          
+                          {/* Referred By */}
+                          <td className="px-5 py-4">
+                            <div className="text-sm font-medium text-slate-700">
+                              {record.referredBy === 'Self' ? (
+                                <span className="text-slate-400 italic">Self</span>
+                              ) : (
+                                record.referredBy
+                              )}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-700">
-                            {record.test}
+                          
+                          {/* Test */}
+                          <td className="px-5 py-4">
+                            <div className="text-sm font-medium text-slate-700 bg-slate-100 inline-block px-2 py-1 rounded">
+                              {record.test}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            {record.payment === 'Online' ? (
-                              <span className="bg-blue-50 text-blue-600 text-xs px-2.5 py-1 rounded-full border border-blue-100 font-medium inline-flex items-center gap-1">
-                                Online
-                              </span>
-                            ) : (
-                              <span className="bg-emerald-50 text-emerald-600 text-xs px-2.5 py-1 rounded-full border border-emerald-100 font-medium inline-flex items-center gap-1">
-                                Cash
-                              </span>
-                            )}
+                          
+                          {/* Payment & Amount combined */}
+                          <td className="px-5 py-4">
+                            <div className="font-bold text-slate-800">₹{record.amount}</div>
+                            <div className="mt-1">
+                              {record.payment === 'Online' ? (
+                                <span className="bg-blue-50 text-blue-600 text-[10px] px-2 py-0.5 rounded-full border border-blue-100 font-semibold uppercase tracking-wide">
+                                  Online
+                                </span>
+                              ) : (
+                                <span className="bg-emerald-50 text-emerald-600 text-[10px] px-2 py-0.5 rounded-full border border-emerald-100 font-semibold uppercase tracking-wide">
+                                  Cash
+                                </span>
+                              )}
+                            </div>
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-right">
+                          
+                          {/* Action */}
+                          <td className="px-5 py-4 text-right">
                             <button 
                               onClick={() => deleteRecord(record.id)}
                               className="text-slate-300 hover:text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100" 
