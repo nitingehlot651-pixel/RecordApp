@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const RecordApp = () => {
   // --- AUTHENTICATION STATE ---
@@ -38,7 +38,7 @@ const RecordApp = () => {
 
   const handleLoginSubmit = (e) => {
     e.preventDefault();
-    if (loginData.username === 'admin' && loginData.password === 'password') {
+    if (loginData.username === 'admin' && loginData.password === 'nitin123') {
       setIsAuthenticated(true);
       localStorage.setItem('isLoggedIn', 'true');
     } else {
@@ -138,7 +138,7 @@ const RecordApp = () => {
   // ==========================================
   return (
     <div className="bg-slate-50 text-slate-800 min-h-screen p-4 md:p-8 font-sans">
-      <div className="max-w-[1400px] mx-auto">
+      <div className="max-w-350 mx-auto">
         
         {/* Header */}
         <header className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
